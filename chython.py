@@ -4,10 +4,10 @@ class chess_game:
         self.board = [['00','00','00','00','00','00','00','00','00','00'],
                     ['00','WR','WN','WB','WQ','WK','WB','WN','WR','00'],
                     ['00','WP','WP','WP','WP','WP','WP','WP','WP','00'],
-                    ['00','--','--','BN','--','--','--','--','--','00'],
                     ['00','--','--','--','--','--','--','--','--','00'],
                     ['00','--','--','--','--','--','--','--','--','00'],
-                    ['00','--','WN','--','--','--','--','--','--','00'],
+                    ['00','--','--','--','--','--','--','--','--','00'],
+                    ['00','--','--','--','--','--','--','--','--','00'],
                     ['00','BP','BP','BP','BP','BP','BP','BP','BP','00'],
                     ['00','BR','BN','BB','BQ','BK','BB','BN','BR','00'],
                     ['00','00','00','00','00','00','00','00','00','00']]
@@ -17,6 +17,14 @@ class chess_game:
         self.queen_rook_has_moved = {'white': False, 'black': False}
         self.king_rook_has_moved = {'white': False, 'black': False}
         self.moves_since_last_capture = 0
+
+    def print_board(self):
+        row_bounds = "-"*37
+        print row_bounds
+        for i in range(8,0,-1):
+            rank = self.board[i][1:9]
+            print " | ".join(rank)
+            print row_bounds
 
 
     def check_occupancy(self, location):
@@ -122,6 +130,7 @@ class chess_move:
 
 
 c = chess_game()
-moves = c.get_all_legal_moves()
-for move in moves:
-    move.print_move()
+#moves = c.get_all_legal_moves()
+#for move in moves:
+#    move.print_move()
+c.print_board()
