@@ -177,7 +177,6 @@ class chess_game:
 
         return moves
 
-
     def get_possible_bishop_moves(self, location):
         chess_moves = []
 
@@ -188,7 +187,7 @@ class chess_game:
         while not self.check_occupancy(new_location):
             chess_moves.append(chess_move('B', location, new_location))
             new_location = str(int(new_location[0])+1)+str(int(new_location[1])+1)
-        
+
         if self.side_to_move == 'white' and self.board[int(new_location[0])][int(new_location[1])][0] == 'B':
             chess_moves.append(chess_move('B', location, new_location))
         if self.side_to_move == 'black' and self.board[int(new_location[0])][int(new_location[1])][0] == 'W':
@@ -199,7 +198,7 @@ class chess_game:
         while not self.check_occupancy(new_location):
             chess_moves.append(chess_move('B', location, new_location))
             new_location = str(int(new_location[0])-1)+str(int(new_location[1])-1)
-        
+
         if self.side_to_move == 'white' and self.board[int(new_location[0])][int(new_location[1])][0] == 'B':
             chess_moves.append(chess_move('B', location, new_location))
         if self.side_to_move == 'black' and self.board[int(new_location[0])][int(new_location[1])][0] == 'W':
@@ -212,27 +211,32 @@ class chess_game:
         while not self.check_occupancy(new_location):
             chess_moves.append(chess_move('B', location, new_location))
             new_location = str(int(new_location[0])+1)+str(int(new_location[1])-1)
-        
+
         if self.side_to_move == 'white' and self.board[int(new_location[0])][int(new_location[1])][0] == 'B':
             chess_moves.append(chess_move('B', location, new_location))
         if self.side_to_move == 'black' and self.board[int(new_location[0])][int(new_location[1])][0] == 'W':
-            chess_moves.append(chess_move('B', location, new_location))            
+            chess_moves.append(chess_move('B', location, new_location))
 
         new_location = str(int(location[0])-1)+str(int(location[1])+1)
 
         while not self.check_occupancy(new_location):
             chess_moves.append(chess_move('B', location, new_location))
             new_location = str(int(new_location[0])-1)+str(int(new_location[1])+1)
-        
+
         if self.side_to_move == 'white' and self.board[int(new_location[0])][int(new_location[1])][0] == 'B':
             chess_moves.append(chess_move('B', location, new_location))
         if self.side_to_move == 'black' and self.board[int(new_location[0])][int(new_location[1])][0] == 'W':
-            chess_moves.append(chess_move('B', location, new_location))  
+            chess_moves.append(chess_move('B', location, new_location))
 
         return chess_moves
 
     def get_possible_queen_moves(self, location):
-        return []
+        diagonal_moves = self.get_possible_bishop_moves(location)
+        straight_moves = self.get_possible_rook_moves(location)
+        moves = diagonal_moves+straight_moves
+        for move in moves:
+            move.piece_type = "Q"
+        return moves
 
     def get_possible_king_moves(self, location):
         return []
@@ -265,7 +269,6 @@ class chess_game:
                         possible_moves += self.get_possible_king_moves(location)
 
         return possible_moves
-
 
 
 class chess_move:
