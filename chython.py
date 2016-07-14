@@ -1,11 +1,13 @@
+import copy
+
 class chess_game:
     def __init__(self):
         self.pieces = {}
         self.board = [['00','00','00','00','00','00','00','00','00','00'],
                     ['00','WR','WN','WB','WQ','WK','--','WN','WR','00'],
-                    ['00','--','WP','WP','--','WP','BP','WP','WP','00'],
+                    ['00','WP','WP','WP','--','--','WP','WP','WP','00'],
                     ['00','--','--','--','--','--','--','--','--','00'],
-                    ['00','--','--','--','WR','BP','--','--','--','00'],
+                    ['00','--','--','--','--','--','--','--','--','00'],
                     ['00','--','--','--','--','--','--','--','--','00'],
                     ['00','--','--','--','--','--','--','--','--','00'],
                     ['00','BP','BP','BP','BP','--','BP','BP','BP','00'],
@@ -26,6 +28,59 @@ class chess_game:
             print " | ".join(rank)
             print row_bounds
 
+    def update_board(self,move):
+        # set previous move
+        self.previous_move = move
+
+        # check and update king move
+        if move.piece_type == 'K':
+            self.king_has_moved[self.side_to_move] = True
+
+        # check and update rook moves
+        if move.piece_type == 'R':
+            if move.starting_location[1]=='8':
+                if move.starting_location[0]=='1':
+                    self.king_rook_has_moved['white'] = True
+                elif move.starting_location[0]=='8':
+                    self.king_rook_has_moved['black'] = True
+            elif move.starting_location[1]=='1':
+                if move.starting_location[0]=='1':
+                    self.queen_rook_has_moved['white'] = True
+                elif move.starting_location[0]=='8':
+                    self.queen_rook_has_moved['black'] = True
+
+        # update last capture tracker
+        if move.capture == False:
+            self.moves_since_last_capture+=1
+        else:
+            self.moves_since_last_capture=0
+
+        # update side to move
+        if self.side_to_move == 'white':
+            self.side_to_move = 'black'
+        else:
+            self.side_to_move = 'white'
+
+        # update board state
+        starting_row = int(move.starting_location[0])
+        starting_column = int(move.starting_location[1])
+        ending_row = int(move.ending_location[0])
+        ending_column = int(move.ending_location[1])
+        piece_to_move = self.board[starting_row][starting_column]
+        self.board[starting_row][starting_column] = '--'
+
+        # check for promotion
+        if move.promotion:
+            self.board[ending_row][ending_column] = piece_to_move[0]+move.promotion
+        else:
+            self.board[ending_row][ending_column] = piece_to_move
+
+        # check for en passant
+        if move.en_passant:
+            en_passant_row = int(move.en_passant[0])
+            en_passant_column = int(move.en_passant[1])
+            self.board[en_passant_row][en_passant_column] = '--'
+
     def check_occupancy(self, location):
         # returns false if square is unoccupied, the piece otherwise (or boundary)
         square = self.board[int(location[0])][int(location[1])]
@@ -33,11 +88,14 @@ class chess_game:
             return square
         return False
 
-    def get_promotion_moves(self, starting_location, ending_location):
+    def get_promotion_moves(self, starting_location, ending_location, capture = False):
         promotion_pieces = ['N', 'B', 'R', 'Q']
         moves = []
         for piece in promotion_pieces:
-             moves.append(chess_move('P', starting_location, ending_location, piece))
+            if capture:
+                moves.append(chess_move('P', starting_location, ending_location, promotion = piece, capture = True))
+            else:
+                moves.append(chess_move('P', starting_location, ending_location, promotion = piece))
         return moves
 
     def get_possible_pawn_moves(self, location):
@@ -78,10 +136,10 @@ class chess_game:
             for diag in diagonals:
                 if self.board[diag[0]][diag[1]][0] == 'B':
                     if location[0] == '7':
-                        promotions = self.get_promotion_moves(location, str(diag[0])+str(diag[1]))
+                        promotions = self.get_promotion_moves(location, str(diag[0])+str(diag[1]), capture = True)
                         chess_moves += promotions
                     else:
-                        chess_moves.append(chess_move('P', location, str(diag[0])+str(diag[1])))
+                        chess_moves.append(chess_move('P', location, str(diag[0])+str(diag[1]), capture = True))
         if self.side_to_move == 'black':
             left_diag = (int(location[0])-1, int(location[1])-1)
             right_diag = (int(location[0])-1, int(location[1])+1)
@@ -89,10 +147,10 @@ class chess_game:
             for diag in diagonals:
                 if self.board[diag[0]][diag[1]][0] == 'W':
                     if location[0] == '2':
-                        promotions = self.get_promotion_moves(location, str(diag[0])+str(diag[1]))
+                        promotions = self.get_promotion_moves(location, str(diag[0])+str(diag[1]), capture = True)
                         chess_moves += promotions
                     else:
-                        chess_moves.append(chess_move('P', location, str(diag[0])+str(diag[1])))
+                        chess_moves.append(chess_move('P', location, str(diag[0])+str(diag[1]), capture = True))
 
         #en passant
         if self.side_to_move == 'white':
@@ -101,7 +159,7 @@ class chess_game:
                     if self.previous_move.starting_location[0]=='7' and self.previous_move.ending_location[0] == '5':
                         if self.previous_move.ending_location[1]==str(int(location[1])-1) or self.previous_move.ending_location[1]==str(int(location[1])+1):
                             ending_column = self.previous_move.ending_location[1]
-                            move = chess_move('P', location, str(int(location[0])+1)+ending_column)
+                            move = chess_move('P', location, str(int(location[0])+1)+ending_column, capture = True, en_passant = location[0]+ending_column)
                             chess_moves.append(move)
         if self.side_to_move == 'black':
             if location[0] == '4':
@@ -109,7 +167,7 @@ class chess_game:
                     if self.previous_move.starting_location[0]=='2' and self.previous_move.ending_location[0] == '4':
                         if self.previous_move.ending_location[1]==str(int(location[1])-1) or self.previous_move.ending_location[1]==str(int(location[1])+1):
                             ending_column = self.previous_move.ending_location[1]
-                            move = chess_move('P', location, str(int(location[0])-1)+ending_column)
+                            move = chess_move('P', location, str(int(location[0])-1)+ending_column, capture = True, en_passant = location[0]+ending_column)
                             chess_moves.append(move)
 
         return chess_moves
@@ -181,17 +239,15 @@ class chess_game:
         chess_moves = []
 
         # main diagonal
-
         new_location = str(int(location[0])+1)+str(int(location[1])+1)
-
         while not self.check_occupancy(new_location):
             chess_moves.append(chess_move('B', location, new_location))
             new_location = str(int(new_location[0])+1)+str(int(new_location[1])+1)
 
         if self.side_to_move == 'white' and self.board[int(new_location[0])][int(new_location[1])][0] == 'B':
-            chess_moves.append(chess_move('B', location, new_location))
+            chess_moves.append(chess_move('B', location, new_location, capture = True))
         if self.side_to_move == 'black' and self.board[int(new_location[0])][int(new_location[1])][0] == 'W':
-            chess_moves.append(chess_move('B', location, new_location))
+            chess_moves.append(chess_move('B', location, new_location, capture = True))
 
         new_location = str(int(location[0])-1)+str(int(location[1])-1)
 
@@ -200,9 +256,9 @@ class chess_game:
             new_location = str(int(new_location[0])-1)+str(int(new_location[1])-1)
 
         if self.side_to_move == 'white' and self.board[int(new_location[0])][int(new_location[1])][0] == 'B':
-            chess_moves.append(chess_move('B', location, new_location))
+            chess_moves.append(chess_move('B', location, new_location, capture = True))
         if self.side_to_move == 'black' and self.board[int(new_location[0])][int(new_location[1])][0] == 'W':
-            chess_moves.append(chess_move('B', location, new_location))
+            chess_moves.append(chess_move('B', location, new_location, capture = True))
 
         # secondary diagonal
 
@@ -213,9 +269,9 @@ class chess_game:
             new_location = str(int(new_location[0])+1)+str(int(new_location[1])-1)
 
         if self.side_to_move == 'white' and self.board[int(new_location[0])][int(new_location[1])][0] == 'B':
-            chess_moves.append(chess_move('B', location, new_location))
+            chess_moves.append(chess_move('B', location, new_location, capture = True))
         if self.side_to_move == 'black' and self.board[int(new_location[0])][int(new_location[1])][0] == 'W':
-            chess_moves.append(chess_move('B', location, new_location))
+            chess_moves.append(chess_move('B', location, new_location, capture = True))
 
         new_location = str(int(location[0])-1)+str(int(location[1])+1)
 
@@ -224,9 +280,9 @@ class chess_game:
             new_location = str(int(new_location[0])-1)+str(int(new_location[1])+1)
 
         if self.side_to_move == 'white' and self.board[int(new_location[0])][int(new_location[1])][0] == 'B':
-            chess_moves.append(chess_move('B', location, new_location))
+            chess_moves.append(chess_move('B', location, new_location, capture = True))
         if self.side_to_move == 'black' and self.board[int(new_location[0])][int(new_location[1])][0] == 'W':
-            chess_moves.append(chess_move('B', location, new_location))
+            chess_moves.append(chess_move('B', location, new_location, capture = True))
 
         return chess_moves
 
@@ -239,7 +295,23 @@ class chess_game:
         return moves
 
     def get_possible_king_moves(self, location):
-        return []
+        if self.side_to_move == 'white':
+            enemy_color = 'B'
+        else:
+            enemy_color = 'W'
+
+        moves = []
+        deltas = [(1,1),(1,0),(1,-1),(0,1),(0,-1),(-1,1),(-1,0),(-1,-1)]
+        for delta in deltas:
+            x_coord = int(location[0])+delta[0]
+            y_coord = int(location[1])+delta[1]
+            new_location = str(x_coord)+str(y_coord)
+            if not self.check_occupancy(new_location):
+                moves.append(chess_move('K',location,new_location))
+            else:
+                if self.check_occupancy(new_location)[0]==enemy_color:
+                    moves.append(chess_move('K',location,new_location,capture = True))
+        return moves
 
     def get_all_legal_moves(self):
         possible_moves = []
@@ -268,28 +340,67 @@ class chess_game:
                     else:
                         possible_moves += self.get_possible_king_moves(location)
 
-        return possible_moves
+        legal_moves = []
+        for move in possible_moves:
+            if not self.check_move_for_check(move):
+                legal_moves.append(move)
+        return legal_moves
+
+    def get_king_location(self):
+        if self.side_to_move == 'white':
+            king = 'BK'
+        else:
+            king = 'WK'
+        for row in range(1,len(self.board)-1):
+            for column in range(1,len(self.board)-1):
+                if self.board[row][column] == king:
+                    return str(row)+str(column)
+
+
+    def check_move_for_check(self, move):
+        potential_game = copy.deepcopy(self)
+        potential_game.update_board(move)
+
+        king_location = potential_game.get_king_location()
+        if potential_game.side_to_move == 'white':
+            potential_game.side_to_move = 'black'
+        else:
+            potential_game.side_to_move = 'white'
+        moves = []
+        moves += potential_game.get_possible_pawn_moves(king_location)
+        moves += potential_game.get_possible_rook_moves(king_location)
+        moves += potential_game.get_possible_bishop_moves(king_location)
+        moves += potential_game.get_possible_knight_moves(king_location)
+        moves += potential_game.get_possible_queen_moves(king_location)
+        moves += potential_game.get_possible_king_moves(king_location)
+
+        for m in moves:
+            ending_square = potential_game.board[int(m.ending_location[0])][int(m.ending_location[1])]
+            if ending_square[1] == m.piece_type:
+                return True
+        return False
+
 
 
 class chess_move:
-    def __init__(self, piece_type, starting_location, ending_location, promotion = False, capture = False):
+    def __init__(self, piece_type, starting_location, ending_location, promotion = False, capture = False, en_passant = False):
         self.piece_type = piece_type
         self.starting_location = starting_location
         self.ending_location = ending_location
         self.promotion = promotion
         self.capture = capture
+        self.en_passant = en_passant
 
     def print_move(self):
         if self.promotion:
-            print self.piece_type+","+self.starting_location+","+self.ending_location+","+self.promotion
+            return self.piece_type+","+self.starting_location+","+self.ending_location+","+self.promotion
         else:
-            print self.piece_type+","+self.starting_location+","+self.ending_location+','+str(self.capture)
+            return self.piece_type+","+self.starting_location+","+self.ending_location+','+str(self.capture)
 
-
-c = chess_game()
-c.print_board()
-#c.previous_move = chess_move('P', '24','44')
-moves = c.get_all_legal_moves()
-for move in moves:
-    if move.piece_type=="R":
+if __name__ == "__main__":
+    c = chess_game()
+    c.print_board()
+    #c.previous_move = chess_move('P', '24','44')
+    moves = c.get_all_legal_moves()
+    for move in moves:
         move.print_move()
