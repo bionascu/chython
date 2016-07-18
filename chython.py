@@ -84,6 +84,16 @@ class chess_game:
             en_passant_column = int(move.en_passant[1])
             self.board[en_passant_row][en_passant_column] = '--'
 
+        # check for castling and update rook position
+        if move.castling == 'Q':
+            rook_to_move = self.board[starting_row][starting_column-4]
+            self.board[ending_row][ending_column+1] = rook_to_move
+            self.board[starting_row][starting_column-4] = '--'
+        if move.castling == 'K':
+            rook_to_move = self.board[starting_row][starting_column+3]
+            self.board[ending_row][ending_column-1] = rook_to_move
+            self.board[starting_row][starting_column+3] = '--'
+
     def check_occupancy(self, location):
         # returns false if square is unoccupied, the piece otherwise (or boundary)
         square = self.board[int(location[0])][int(location[1])]
@@ -342,6 +352,7 @@ class chess_game:
                         possible_moves += self.get_possible_knight_moves(location)
                     else:
                         possible_moves += self.get_possible_king_moves(location)
+                        possible_moves += self.get_castling_moves(location)
 
         legal_moves = []
         for move in possible_moves:
@@ -383,16 +394,57 @@ class chess_game:
                 return True
         return False
 
+    def get_castling_moves(self, location):
+        queen_side, king_side = True, True 
+        if self.side_to_move == 'white': row = 1
+        else: row = 8
+        queen_side_columns = [2, 3, 4]
+        king_side_columns = [6, 7]
 
+        # queen side
+        if not self.king_has_moved[self.side_to_move] and not self.queen_rook_has_moved[self.side_to_move]:
+            # check occupancy
+            for column in queen_side_columns:
+                if self.board[row][column] != '--':
+                    queen_side = False
+            # check for check
+            for column in queen_side_columns:
+                move = chess_move('K', location, str(row)+str(column+1))
+                if self.check_move_for_check(move):
+                    queen_side = False
+        else: 
+            queen_side = False 
+
+        # king side
+        if not self.king_has_moved[self.side_to_move] and not self.king_rook_has_moved[self.side_to_move]:
+            # check occupancy
+            for column in king_side_columns:
+                if self.board[row][column] != '--':
+                    king_side = False
+            # check for check
+            for column in king_side_columns:
+                move = chess_move('K', location, str(row)+str(column+1))
+                if self.check_move_for_check(move):
+                    king_side = False
+        else: 
+            king_side = False 
+
+        moves = []
+        if queen_side:
+            moves.append(chess_move('K', location, location[0]+str(int(location[1])-2), castling = 'Q'))
+        if king_side:
+            moves.append(chess_move('K', location, location[0]+str(int(location[1])+2), castling = 'K'))
+        return moves    
 
 class chess_move:
-    def __init__(self, piece_type, starting_location, ending_location, promotion = False, capture = False, en_passant = False):
+    def __init__(self, piece_type, starting_location, ending_location, promotion = False, capture = False, en_passant = False, castling = False):
         self.piece_type = piece_type
         self.starting_location = starting_location
         self.ending_location = ending_location
         self.promotion = promotion
         self.capture = capture
         self.en_passant = en_passant
+        self.castling = castling
 
     def print_move(self):
         column_names = list('abcdefgh')
@@ -405,6 +457,8 @@ class chess_move:
             return self.piece_type+": "+starting_position+","+ending_position+","+"P="+self.promotion
         elif self.capture:
             return self.piece_type+": "+starting_position+","+ending_position+','+"Capture"
+        elif self.castling:
+            return self.piece_type+": "+starting_position+","+ending_position+','+"Castling"+'-'+self.castling
         else:
             return self.piece_type+": "+starting_position+","+ending_position
 
