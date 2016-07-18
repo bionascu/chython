@@ -4,13 +4,13 @@ class chess_game:
     def __init__(self):
         self.pieces = {}
         self.board = [['00','00','00','00','00','00','00','00','00','00'],
-                    ['00','WR','WN','WB','WQ','WK','--','WN','WR','00'],
-                    ['00','WP','WP','WP','--','--','WP','WP','WP','00'],
+                    ['00','WR','WN','WB','WQ','WK','WB','WN','WR','00'],
+                    ['00','WP','WP','WP','WP','WP','WP','WP','WP','00'],
                     ['00','--','--','--','--','--','--','--','--','00'],
                     ['00','--','--','--','--','--','--','--','--','00'],
                     ['00','--','--','--','--','--','--','--','--','00'],
                     ['00','--','--','--','--','--','--','--','--','00'],
-                    ['00','BP','BP','BP','BP','--','BP','BP','BP','00'],
+                    ['00','BP','BP','BP','BP','BP','BP','BP','BP','00'],
                     ['00','BR','BN','BB','BQ','BK','BB','BN','BR','00'],
                     ['00','00','00','00','00','00','00','00','00','00']]
         self.side_to_move = 'white'
@@ -21,12 +21,15 @@ class chess_game:
         self.moves_since_last_capture = 0
 
     def print_board(self):
-        row_bounds = "-"*37
+        row_bounds = "   "+"-"*37
         print row_bounds
         for i in range(8,0,-1):
             rank = self.board[i][1:9]
-            print " | ".join(rank)
+            print str(i) + " |" + " | ".join(rank) + "|"
             print row_bounds
+        column_names = list('abcdefgh')
+        padded_columns = [" "+x for x in column_names]
+        print "   "+" | ".join(padded_columns)
 
     def update_board(self,move):
         # set previous move
@@ -392,10 +395,18 @@ class chess_move:
         self.en_passant = en_passant
 
     def print_move(self):
-        if self.promotion:
-            return self.piece_type+","+self.starting_location+","+self.ending_location+","+self.promotion
+        column_names = list('abcdefgh')
+        starting_position = column_names[int(self.starting_location[1])-1]+self.starting_location[0]
+        ending_position = column_names[int(self.ending_location[1])-1]+self.ending_location[0]
+
+        if self.promotion and self.capture:
+            return self.piece_type+": "+starting_position+","+ending_position+","+"Capture, "+"P="+self.promotion
+        elif self.promotion:
+            return self.piece_type+": "+starting_position+","+ending_position+","+"P="+self.promotion
+        elif self.capture:
+            return self.piece_type+": "+starting_position+","+ending_position+','+"Capture"
         else:
-            return self.piece_type+","+self.starting_location+","+self.ending_location+','+str(self.capture)
+            return self.piece_type+": "+starting_position+","+ending_position
 
 if __name__ == "__main__":
     c = chess_game()
