@@ -4,14 +4,14 @@ class chess_game:
     def __init__(self):
         self.pieces = {}
         self.board = [['00','00','00','00','00','00','00','00','00','00'],
-                    ['00','WR','WN','WB','WQ','WK','WB','WN','WR','00'],
+                    ['00','WR','WN','WB','WQ','WK','--','--','WR','00'],
                     ['00','WP','WP','WP','WP','WP','WP','WP','WP','00'],
+                    ['00','--','--','--','--','--','--','--','WN','00'],
                     ['00','--','--','--','--','--','--','--','--','00'],
                     ['00','--','--','--','--','--','--','--','--','00'],
-                    ['00','--','--','--','--','--','--','--','--','00'],
-                    ['00','--','--','--','--','--','--','--','--','00'],
-                    ['00','BP','BP','BP','BP','BP','BP','BP','BP','00'],
-                    ['00','BR','BN','BB','BQ','BK','BB','BN','BR','00'],
+                    ['00','--','BN','--','--','--','--','--','--','00'],
+                    ['00','BP','BP','BP','BP','BP','--','--','--','00'],
+                    ['00','BR','--','--','--','BK','--','--','BR','00'],
                     ['00','00','00','00','00','00','00','00','00','00']]
         self.side_to_move = 'white'
         self.previous_move = None
@@ -133,12 +133,14 @@ class chess_game:
 
         # check 2 moves up
         if self.side_to_move == 'white' and location[0]=='2':
+            front = str(int(location[0])+1)+location[1]
             frontfront = str(int(location[0])+2)+location[1]
-            if not self.check_occupancy(frontfront):
+            if not self.check_occupancy(frontfront) and not self.check_occupancy(front):
                 chess_moves.append(chess_move('P', location, frontfront))
         elif self.side_to_move == 'black' and location[0]=='7':
+            front = str(int(location[0])-1)+location[1]
             frontfront = str(int(location[0])-2)+location[1]
-            if not self.check_occupancy(frontfront):
+            if not self.check_occupancy(frontfront) and not self.check_occupancy(front):
                 chess_moves.append(chess_move('P', location, frontfront))
 
         #check attacking moves
@@ -239,7 +241,7 @@ class chess_game:
                 x_coord = int(location[0])+d1
                 y_coord = int(location[1])+d2
                 new_location = str(x_coord)+str(y_coord)
-                if x_coord>=0 and y_coord >=0:
+                if x_coord>=0 and y_coord >=0 and x_coord<=9 and y_coord<=9:
                     if not self.check_occupancy(new_location):
                         moves.append(chess_move('N',location,new_location))
                     else:
@@ -395,11 +397,13 @@ class chess_game:
         return False
 
     def get_castling_moves(self, location):
-        queen_side, king_side = True, True 
+        queen_side, king_side = True, True
         if self.side_to_move == 'white': row = 1
         else: row = 8
         queen_side_columns = [2, 3, 4]
+        queen_side_check_columns = [3, 4]
         king_side_columns = [6, 7]
+        king_side_check_columns = [5, 6]
 
         # queen side
         if not self.king_has_moved[self.side_to_move] and not self.queen_rook_has_moved[self.side_to_move]:
@@ -408,12 +412,12 @@ class chess_game:
                 if self.board[row][column] != '--':
                     queen_side = False
             # check for check
-            for column in queen_side_columns:
-                move = chess_move('K', location, str(row)+str(column+1))
+            for column in queen_side_check_columns:
+                move = chess_move('K', location, str(row)+str(column))
                 if self.check_move_for_check(move):
                     queen_side = False
-        else: 
-            queen_side = False 
+        else:
+            queen_side = False
 
         # king side
         if not self.king_has_moved[self.side_to_move] and not self.king_rook_has_moved[self.side_to_move]:
@@ -422,19 +426,19 @@ class chess_game:
                 if self.board[row][column] != '--':
                     king_side = False
             # check for check
-            for column in king_side_columns:
-                move = chess_move('K', location, str(row)+str(column+1))
+            for column in king_side_check_columns:
+                move = chess_move('K', location, str(row)+str(column))
                 if self.check_move_for_check(move):
                     king_side = False
-        else: 
-            king_side = False 
+        else:
+            king_side = False
 
         moves = []
         if queen_side:
             moves.append(chess_move('K', location, location[0]+str(int(location[1])-2), castling = 'Q'))
         if king_side:
             moves.append(chess_move('K', location, location[0]+str(int(location[1])+2), castling = 'K'))
-        return moves    
+        return moves
 
 class chess_move:
     def __init__(self, piece_type, starting_location, ending_location, promotion = False, capture = False, en_passant = False, castling = False):
