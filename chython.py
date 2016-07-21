@@ -68,10 +68,12 @@ class chess_game:
         # update opponents castling rights
         self.can_castle_queenside[self.opponent_color].append(self.can_castle_queenside[self.opponent_color][-1])
         self.can_castle_kingside[self.opponent_color].append(self.can_castle_kingside[self.opponent_color][-1])
+
         # update movers castling rights if they haven't changed
         if len(self.can_castle_kingside[self.side_to_move])!=len(self.can_castle_kingside[self.opponent_color]):
             self.can_castle_kingside[self.side_to_move].append(self.can_castle_kingside[self.side_to_move][-1])
-            self.can_castle_queenside[self.side_to_move].append(self.can_castle_queenside[self.side_to_move][-1])
+        if len(self.can_castle_queenside[self.side_to_move])!= len(self.can_castle_queenside[self.opponent_color]):
+            self.can_castle_queenside[self.side_to_move].append(self.can_castle_kingside[self.side_to_move][-1])
 
         # update last capture tracker
         if move.capture == False:

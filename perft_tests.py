@@ -36,6 +36,7 @@ def test(board, max_depth):
         print [x.print_move() for x in next_moves]
         for move2 in next_moves:
             print move.print_move(), move2.print_move()
+            print game.can_castle_queenside
             game.update_board(move2)
             count+=len(game.get_all_legal_moves())
             game.unupdate_board(move2)
