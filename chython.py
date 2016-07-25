@@ -73,7 +73,7 @@ class chess_game:
         if len(self.can_castle_kingside[self.side_to_move])!=len(self.can_castle_kingside[self.opponent_color]):
             self.can_castle_kingside[self.side_to_move].append(self.can_castle_kingside[self.side_to_move][-1])
         if len(self.can_castle_queenside[self.side_to_move])!= len(self.can_castle_queenside[self.opponent_color]):
-            self.can_castle_queenside[self.side_to_move].append(self.can_castle_kingside[self.side_to_move][-1])
+            self.can_castle_queenside[self.side_to_move].append(self.can_castle_queenside[self.side_to_move][-1])
 
         # update last capture tracker
         if move.capture == False:
@@ -165,7 +165,7 @@ class chess_game:
         moves = []
         for piece in promotion_pieces:
             if capture:
-                moves.append(chess_move('P', starting_location, ending_location, promotion = piece, capture = True))
+                moves.append(chess_move('P', starting_location, ending_location, promotion = piece, capture = capture))
             else:
                 moves.append(chess_move('P', starting_location, ending_location, promotion = piece))
         return moves
@@ -461,13 +461,14 @@ class chess_game:
         if self.side_to_move == 'W': row = 1
         else: row = 8
         queen_side_columns = [2, 3, 4]
-        queen_side_check_columns = [3, 4]
+        queen_side_check_columns = [3, 4, 5]
+        queen_rook_column = 1
         king_side_columns = [6, 7]
         king_side_check_columns = [5, 6]
+        king_rook_column = 8
 
         # queen side
-        if self.can_castle_queenside[self.side_to_move]:
-        #if not self.king_has_moved[self.side_to_move] and not self.queen_rook_has_moved[self.side_to_move]:
+        if self.can_castle_queenside[self.side_to_move][-1]:
             # check occupancy
             for column in queen_side_columns:
                 if self.board[row][column] != '--':
@@ -477,12 +478,15 @@ class chess_game:
                 move = chess_move('K', location, str(row)+str(column))
                 if self.check_move_for_check(move):
                     queen_side = False
+            rook_location = str(row)+str(queen_rook_column)
+            if self[rook_location]!=self.side_to_move+'R':
+                queen_side = False
+
         else:
             queen_side = False
 
         # king side
-        if self.can_castle_kingside[self.side_to_move]:
-        #if not self.king_has_moved[self.side_to_move] and not self.king_rook_has_moved[self.side_to_move]:
+        if self.can_castle_kingside[self.side_to_move][-1]:
             # check occupancy
             for column in king_side_columns:
                 if self.board[row][column] != '--':
@@ -492,6 +496,9 @@ class chess_game:
                 move = chess_move('K', location, str(row)+str(column))
                 if self.check_move_for_check(move):
                     king_side = False
+            rook_location = str(row)+str(king_rook_column)
+            if self[rook_location]!=self.side_to_move+'R':
+                king_side = False
         else:
             king_side = False
 

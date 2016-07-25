@@ -1,15 +1,16 @@
 import chython
 
 class chess_gui:
-    def __init__(self):
-        print "\n================================== CHYTHON ===============================\n"
-        print "Welcome to chess! A new game has begun. The current state of the board is: \n"
+    def __init__(self, play_game = True):
         self.game = chython.chess_game()
         self.pieces = ['BK', 'BQ', 'BR', 'BB', 'BN', 'BP', 'WK', 'WQ', 'WR', 'WB', 'WN', 'WP']
         self.piece_mapping = {self.pieces[x]: unichr(9812+x) for x in range(len(self.pieces))}
         self.piece_mapping['--'] = ' '
-        self.print_board()
-        self.prompt_move()
+        if play_game:
+            print "\n================================== CHYTHON ===============================\n"
+            print "Welcome to chess! A new game has begun. The current state of the board is: \n"
+            self.print_board()
+            self.prompt_move()
 
     def get_box_borders(self):
         allbox = u''.join(unichr(9472 + x) for x in range(200))
