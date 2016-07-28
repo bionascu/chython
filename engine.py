@@ -1,3 +1,12 @@
+
+KNIGHT_POSITION_WEIGHT = 1
+PAWN_STRUCTURE_WEIGHT = 1
+BISHOP_POSITION_WEIGHT = 1
+ROOK_POSITION_WEIGHT = 1
+PASSED_PAWN_WEIGHT = 1
+KING_SAFETY_WEIGHT = 1
+KING_CENTRALITY_WEIGHT = 1
+
 def evaluate_material_score(chess_game):
     side_to_move = chess_game.side_to_move[0].upper()
     side_to_move_counter = 0
@@ -29,5 +38,13 @@ def evaluate_passed_pawns(chess_game): # J
 def evaluate_king_safety(chess_game): # j
     pass
 
-def evaluate_king_centrality(chess_game): # B
-    pass
+def evaluate_position(chess_game):
+    m_score = evaluate_material_score(chess_game)
+    n_score = KNIGHT_POSITION_WEIGHT*evaluate_knight_positions(chess_game)
+    p_score = PAWN_STRUCTURE_WEIGHT*evaluate_pawn_structure(chess_game)
+    b_score = BISHOP_POSITION_WEIGHT*evaluate_bishop_positions(chess_game)
+    r_score = ROOK_POSITION_WEIGHT*evaluate_rook_positions(chess_game)
+    pp_score = PASSED_PAWN_WEIGHT*evaluate_passed_pawns(chess_game)
+    ks_score = KING_SAFETY_WEIGHT*evaluate_king_safety(chess_game)
+    return m_score+n_score+p_score+b_score+r_score+pp_score+ks_score
+    
